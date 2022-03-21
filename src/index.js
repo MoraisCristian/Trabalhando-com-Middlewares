@@ -10,19 +10,71 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const user = users.find((user) => user.username === username);
+
+  if (user === undefined){
+    return response.status(404).json({error: 'User does not exist'});
+  }
+
+  request.user = user;
+
+  return next() 
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const user  = request.user;
+
+  const todo_amount = user.todos.length;
+
+  if (user.pro != true && todo_amount >= 10) {
+    return response.status(403).json({ error : 'You need to be a pro user to add a new todo' })
+  }
+
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { username } = request.headers;
+  const { id } = request.params;
+
+  const user = users.find((user) => user.username === username);
+
+  const is_uuid = validate(id);
+
+  if (!is_uuid) {
+    return response.status(400).json({ error: 'Invalid id' });
+  }
+
+  if (user === undefined){
+    return response.status(404).json({ error: 'Invalid username' })
+  }
+
+  const todo = user.todos.find((todo) => todo.id === id);
+
+  if (todo === undefined){
+    return response.status(404).json({ error: 'Todo not found' })
+  }
+
+  request.todo = todo;
+  request.user = user;
+
+  return next()
+
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+
+  const user = users.find((user) => user.id === id);
+
+  if (user === undefined) {
+    return response.status(404).json({ error: 'Wrong user id' })
+  }
+
+  request.user = user;
+
+  return next()
 }
 
 app.post('/users', (request, response) => {
